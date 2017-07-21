@@ -1,7 +1,7 @@
 package com.github.sgillespie.hook;
 
-import com.atlassian.stash.repository.Repository;
-import com.atlassian.stash.setting.Settings;
+import com.atlassian.bitbucket.repository.Repository;
+import com.atlassian.bitbucket.setting.Settings;
 
 import java.util.List;
 

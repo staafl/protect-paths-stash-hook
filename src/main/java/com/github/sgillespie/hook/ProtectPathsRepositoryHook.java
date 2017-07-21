@@ -1,16 +1,16 @@
 package com.github.sgillespie.hook;
 
-import com.atlassian.stash.hook.HookResponse;
-import com.atlassian.stash.hook.repository.PreReceiveRepositoryHook;
-import com.atlassian.stash.hook.repository.RepositoryHookContext;
-import com.atlassian.stash.hook.repository.RepositoryMergeRequestCheck;
-import com.atlassian.stash.hook.repository.RepositoryMergeRequestCheckContext;
-import com.atlassian.stash.pull.PullRequestRef;
-import com.atlassian.stash.repository.RefChange;
-import com.atlassian.stash.repository.Repository;
-import com.atlassian.stash.setting.Settings;
-import com.atlassian.stash.util.PageRequest;
-import com.atlassian.stash.util.PageRequestImpl;
+import com.atlassian.bitbucket.hook.HookResponse;
+import com.atlassian.bitbucket.hook.repository.PreReceiveRepositoryHook;
+import com.atlassian.bitbucket.hook.repository.RepositoryHookContext;
+import com.atlassian.bitbucket.hook.repository.RepositoryMergeRequestCheck;
+import com.atlassian.bitbucket.hook.repository.RepositoryMergeRequestCheckContext;
+import com.atlassian.bitbucket.pull.PullRequestRef;
+import com.atlassian.bitbucket.repository.RefChange;
+import com.atlassian.bitbucket.repository.Repository;
+import com.atlassian.bitbucket.setting.Settings;
+import com.atlassian.bitbucket.util.PageRequest;
+import com.atlassian.bitbucket.util.PageRequestImpl;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -71,7 +71,7 @@ public class ProtectPathsRepositoryHook implements PreReceiveRepositoryHook,
         PullRequestRef toRef = context.getMergeRequest().getPullRequest().getToRef();
 
         List<String> errors = protectPathsChangesetService.validateChangesets(repository, settings, toRef.getId(),
-                toRef.getLatestChangeset(), fromRef.getLatestChangeset());
+                toRef.getLatestCommit(), fromRef.getLatestCommit());
 
         if (!errors.isEmpty()) {
             context.getMergeRequest().veto("There are changes to protected paths!", join(errors, "\n"));

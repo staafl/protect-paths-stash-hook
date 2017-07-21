@@ -1,17 +1,18 @@
 package com.github.sgillespie.hook;
 
-import com.atlassian.stash.commit.CommitService;
-import com.atlassian.stash.content.*;
-import com.atlassian.stash.repository.Repository;
-import com.atlassian.stash.setting.Settings;
-import com.atlassian.stash.user.Permission;
-import com.atlassian.stash.user.PermissionService;
-import com.atlassian.stash.user.StashAuthenticationContext;
-import com.atlassian.stash.user.StashUser;
-import com.atlassian.stash.util.Page;
-import com.atlassian.stash.util.PageRequest;
-import com.atlassian.stash.util.PageRequestImpl;
-import com.google.common.base.Function;
+import com.atlassian.bitbucket.commit.CommitService;
+import com.atlassian.bitbucket.content.*;
+import com.atlassian.bitbucket.commit.*;
+import com.atlassian.bitbucket.repository.Repository;
+import com.atlassian.bitbucket.setting.Settings;
+import com.atlassian.bitbucket.permission.Permission;
+import com.atlassian.bitbucket.permission.PermissionService;
+import com.atlassian.bitbucket.auth.AuthenticationContext;
+import com.atlassian.bitbucket.user.ApplicationUser;
+import com.atlassian.bitbucket.util.Page;
+import com.atlassian.bitbucket.util.PageRequest;
+import com.atlassian.bitbucket.util.PageRequestImpl;
+import java.util.function.Function;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -23,14 +24,14 @@ public class ProtectPathsChangesetServiceImpl implements ProtectPathsChangesetSe
 
     private final CommitService commitService;
     private final PermissionService permissionService;
-    private final StashAuthenticationContext stashAuthenticationContext;
+    private final AuthenticationContext bitbucketAuthenticationContext;
     private final SettingsFactoryService settingsFactoryService;
 
     public static final Function<Changeset, String> CHANGESET_TO_ID =
             new Function<Changeset, String>() {
                 @Override
                 public String apply(@Nullable Changeset changeset) {
-                    return changeset.getId();
+                    return changeset.getToCommit().getId();
                 }
             };
     public static final Function<Change, Path> CHANGE_TO_PATH =
@@ -43,11 +44,11 @@ public class ProtectPathsChangesetServiceImpl implements ProtectPathsChangesetSe
 
     public ProtectPathsChangesetServiceImpl(CommitService commitService,
                                             PermissionService permissionService,
-                                            StashAuthenticationContext stashAuthenticationContext,
+                                            AuthenticationContext bitbucketAuthenticationContext,
                                             SettingsFactoryService settingsFactoryService) {
         this.commitService = commitService;
         this.permissionService = permissionService;
-        this.stashAuthenticationContext = stashAuthenticationContext;
+        this.bitbucketAuthenticationContext = bitbucketAuthenticationContext;
         this.settingsFactoryService = settingsFactoryService;
     }
 
@@ -57,7 +58,7 @@ public class ProtectPathsChangesetServiceImpl implements ProtectPathsChangesetSe
         List<String> errors = new ArrayList<>();
 
         // Admins and excluded users
-        if (shouldExcludeUser(settings, repository, stashAuthenticationContext.getCurrentUser()))
+        if (shouldExcludeUser(settings, repository, bitbucketAuthenticationContext.getCurrentUser()))
             return new ArrayList<>();
 
         // Get protected paths
@@ -67,15 +68,15 @@ public class ProtectPathsChangesetServiceImpl implements ProtectPathsChangesetSe
 
         Page<Changeset> changesets = findNewChangeSets(repository, fromHash, toHash);
         for (Changeset changeset : changesets.getValues()) {
-            Page<DetailedChangeset> detailedChangesets = getDetailedChangesets(repository, changesets);
-            for (DetailedChangeset detailedChangeset : detailedChangesets.getValues()) {
+            Page<Changeset> detailedChangesets = changesets;
+            for (Changeset detailedChangeset : detailedChangesets.getValues()) {
                 // Validate the paths
-                Page<Path> paths = detailedChangeset.getChanges().transform(CHANGE_TO_PATH);
+        Page<Path> paths = detailedChangeset.getChanges().<Path>transform(CHANGE_TO_PATH);
                 for (Path path : paths.getValues()) {
                     for (String regexp : pathRegexps) {
                         if (path.toString().matches(regexp)) {
                             errors.add(String.format("%s: %s matches restricted path %s", refId,
-                                    changeset.getId(), regexp));
+                                    changeset.getToCommit().getId(), regexp));
                         }
                     }
                 }
@@ -92,7 +93,7 @@ public class ProtectPathsChangesetServiceImpl implements ProtectPathsChangesetSe
      * @param user the currently logged in user
      * @return true if the user is an administrator or an excluded user
      */
-    private boolean shouldExcludeUser(Settings settings, Repository repository, StashUser user) {
+    private boolean shouldExcludeUser(Settings settings, Repository repository, ApplicationUser user) {
         Boolean isRepoAdmin = permissionService.hasRepositoryPermission(repository, Permission.REPO_ADMIN);
         Boolean isExcluded = settingsFactoryService.getExcludedUsers(settings).contains(user.getName());
 
@@ -115,27 +116,37 @@ public class ProtectPathsChangesetServiceImpl implements ProtectPathsChangesetSe
         }
     }
 
-    private Page<DetailedChangeset> findDetailedChangeSets(Repository repository, String fromHash, String toHash) {
-        return getDetailedChangesets(repository, findNewChangeSets(repository, fromHash, toHash));
+    private Page<Changeset> findDetailedChangeSets(Repository repository, String fromHash, String toHash) {
+        return findNewChangeSets(repository, fromHash, toHash);
     }
 
-    private Page<Changeset> findNewChangeSets(Repository repository, String fromHash, String toHash) {
-        ChangesetsBetweenRequest changesetsBetweenRequest = new ChangesetsBetweenRequest.Builder(repository)
+    private Page<Changeset> findNewChangeSets(final Repository repository, String fromHash, String toHash) {
+        CommitsBetweenRequest changesetsRequest = new CommitsBetweenRequest.Builder(repository)
                 .exclude(fromHash)
                 .include(toHash)
                 .build();
-        return commitService.getChangesetsBetween(changesetsBetweenRequest, PAGE_REQUEST);
+        return commitService.getCommitsBetween(changesetsRequest, PAGE_REQUEST).<Changeset>transform(
+            new Function<Commit, Changeset>() {
+                @Override
+                public Changeset apply(@Nullable Commit change) {
+                    // todo: optimize this
+                    for (Changeset cs : commitService.getChangesets(
+                        new ChangesetsRequest.Builder(repository).commitId(change.getId()).build(), PAGE_REQUEST).getValues())
+                        return cs;
+                    return null;
+                }
+            });
     }
 
-    private Page<DetailedChangeset> getDetailedChangesets(Repository repository, Page<Changeset> changeSets) {
-        Page<String> changeSetIds = changeSets.transform(CHANGESET_TO_ID);
-
-        DetailedChangesetsRequest detailedChangesetsRequest = new DetailedChangesetsRequest.Builder(repository)
-                .changesetIds(changeSetIds.getValues())
-                .maxChangesPerCommit(PageRequest.MAX_PAGE_LIMIT)
-                .build();
-        return commitService.getDetailedChangesets(detailedChangesetsRequest, PAGE_REQUEST);
-    }
+//    private Page<Changeset> getDetailedChangesets(Repository repository, Page<Changeset> changeSets) {
+//        Page<String> changeSetIds = changeSets.<Changeset>transform(CHANGESET_TO_ID);
+//
+//        ChangesetsRequest detailedChangesetsRequest = new ChangesetsRequest.Builder(repository)
+//                .changesetIds(changeSetIds.getValues())
+//                .maxChangesPerCommit(PageRequest.MAX_PAGE_LIMIT)
+//                .build();
+//        return commitService.getDetailedChangesets(detailedChangesetsRequest, PAGE_REQUEST);
+//    }
 
     private boolean matchesBranch(Collection<String> regexps, String refId) {
         for (String branch : regexps) {

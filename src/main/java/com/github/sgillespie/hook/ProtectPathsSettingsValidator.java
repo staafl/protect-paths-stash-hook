@@ -1,9 +1,9 @@
 package com.github.sgillespie.hook;
 
-import com.atlassian.stash.repository.Repository;
-import com.atlassian.stash.setting.RepositorySettingsValidator;
-import com.atlassian.stash.setting.Settings;
-import com.atlassian.stash.setting.SettingsValidationErrors;
+import com.atlassian.bitbucket.repository.Repository;
+import com.atlassian.bitbucket.setting.RepositorySettingsValidator;
+import com.atlassian.bitbucket.setting.Settings;
+import com.atlassian.bitbucket.setting.SettingsValidationErrors;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nonnull;

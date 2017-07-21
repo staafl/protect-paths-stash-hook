@@ -14,9 +14,9 @@
     <component-import key="applicationProperties"
                       interface="com.atlassian.sal.api.ApplicationProperties"/>
     <component-import key="commitService"
-                      interface="com.atlassian.stash.commit.CommitService"/>
+                      interface="com.atlassian.bitbucket.commit.CommitService"/>
     <component-import key="permissionService"
-                      interface="com.atlassian.stash.user.PermissionService"/>
+                      interface="com.atlassian.bitbucket.permission.PermissionService"/>
 
     <component key="protectPathsChangesetService"
                class="com.github.sgillespie.hook.ProtectPathsChangesetServiceImpl"
@@ -35,7 +35,7 @@
                      class="com.github.sgillespie.hook.ProtectPathsRepositoryHook">
         <description key="protect-paths-repository-hook.description">Disables changes to specific paths for non-administrators</description>
         <config-form name="Protect Paths Repository Hook" key="restrictPathsConfig">
-            <view>com.github.sgillespie.stash.hook.config</view>
+            <view>com.github.sgillespie.bitbucket.hook.config</view>
             <directory location="static"/>
         </config-form>
         <validator>com.github.sgillespie.hook.ProtectPathsSettingsValidator</validator>

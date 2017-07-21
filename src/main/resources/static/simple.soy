@@ -1,4 +1,4 @@
-{namespace com.github.sgillespie.stash.hook}
+{namespace com.github.sgillespie.bitbucket.hook}
 
 /**
  * Configuration for restrict paths hook
@@ -12,10 +12,10 @@
         {param value: $config['pathPatterns'] /}
         {param isRequired: true /}
         {param labelContent}
-            {stash_i18n('com.github.sgillespie.hook.pathPatterns.label', 'Path Patterns')}
+            {( 'Path Patterns')}
         {/param}
         {param descriptionText}
-            {stash_i18n('com.github.sgillespie.hook.pathPatterns.description',
+            {(
                         'Regular expressions of filesystem paths to protect. Whitespace seperated')}
         {/param}
         {param errorTexts: $errors ? $errors['pathPatterns'] : null /}
@@ -26,10 +26,10 @@
         {param id: 'filterType'/}
         {param isRequired: true/}
         {param labelContent}
-            {stash_i18n('com.github.sgillespie.hook.filterType.label', 'Filter Branches By')}
+            {( 'Filter Branches By')}
         {/param}
         {param descriptionText}
-            {stash_i18n('com.github.sgillespie.hook.filterType.description',
+            {(
                         'The type of filter to match branches to protect')}
         {/param}
         {param options: [
@@ -44,10 +44,10 @@
         {param value: $config['branchFilter']/}
         {param isRequired: false/}
         {param labelContent}
-            {stash_i18n('com.github.sgillespie.hook.branchFilter.label', 'Branches')}
+            {( 'Branches')}
         {/param}
         {param descriptionText}
-            {stash_i18n('com.github.sgillespie.hook.branchFilter.description',
+            {(
                         'Branches to protect. Whitespace seperated. Regular expressions accepted.')}
         {/param}
         {param errorTexts: $errors ? $errors['branchFilter'] : null /}
@@ -58,25 +58,28 @@
         {param value: $config['excludeUsers']/}
         {param isRequired: false/}
         {param labelContent}
-            {stash_i18n('com.github.sgillespie.hook.excludeUsers.label', 'Exclude Users')}
+            {( 'Exclude Users')}
         {/param}
         {param descriptionText}
-            {stash_i18n('com.github.sgillespie.hook.excludeUsers.description',
+            {(
                         'Users to exclude.  Whitespace seperated.')}
         {/param}
         {param errorTexts: $errors ? $errors['excludeUsers'] : null/}
     {/call}
     
-    {call aui.form.checkBox}
+    {call aui.form.checkboxField}
         {param id: 'deletesOnly'/}
-        {param value: $config['deletesOnly']/}
-        {param isRequired: false/}
+        {param fields: [[
+			'id' : 'deletesOnlyCheckBoxId',
+			'labelText': 'Enabled',
+			'isChecked' : $config['deletesOnly']
+		]] /}
         {param labelContent}
-            {stash_i18n('com.github.sgillespie.hook.deletesOnly.label', 'Deletes Only')}
+            {( 'Deletes Only')}
         {/param}
         {param descriptionText}
-            {stash_i18n('com.github.sgillespie.hook.deletesOnly.description',
-                        'If true, only deletes are rejected.')}
+            {(
+                        'Only deletes are rejected?')}
         {/param}
         {param errorTexts: $errors ? $errors['deletesOnly'] : null/}
     {/call}
