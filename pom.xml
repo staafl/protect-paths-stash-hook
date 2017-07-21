@@ -96,6 +96,12 @@
 
     <build>
         <plugins>
+           <!-- AMPS plug-in-->
+           <plugin>
+                <groupId>com.atlassian.maven.plugins</groupId>
+                <artifactId>maven-amps-plugin</artifactId>
+                <version>${amps.version}</version>
+            </plugin>
             <plugin>
                 <groupId>com.atlassian.maven.plugins</groupId>
                 <artifactId>maven-stash-plugin</artifactId>

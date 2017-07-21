@@ -66,4 +66,18 @@
         {/param}
         {param errorTexts: $errors ? $errors['excludeUsers'] : null/}
     {/call}
+    
+    {call aui.form.checkBox}
+        {param id: 'deletesOnly'/}
+        {param value: $config['deletesOnly']/}
+        {param isRequired: false/}
+        {param labelContent}
+            {stash_i18n('com.github.sgillespie.hook.deletesOnly.label', 'Deletes Only')}
+        {/param}
+        {param descriptionText}
+            {stash_i18n('com.github.sgillespie.hook.deletesOnly.description',
+                        'If true, only deletes are rejected.')}
+        {/param}
+        {param errorTexts: $errors ? $errors['deletesOnly'] : null/}
+    {/call}
 {/template}

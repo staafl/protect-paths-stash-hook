@@ -12,4 +12,6 @@ public interface SettingsFactoryService {
     List<String> getBranchFilters(Settings settings);
 
     List<String> getExcludedUsers(Settings settings);
+    
+    boolean getDeletesOnly(Settings settings);
 }

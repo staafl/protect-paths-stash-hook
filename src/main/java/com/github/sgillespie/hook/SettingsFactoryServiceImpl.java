@@ -13,6 +13,7 @@ public class SettingsFactoryServiceImpl implements SettingsFactoryService {
     public static final String KEY_FILTER_TYPE = "filterType";
     public static final String KEY_BRANCH_FILTERS = "branchFilter";
     public static final String KEY_EXCLUDED_USERS = "excludeUsers";
+    public static final String KEY_DELETES_ONLY = "deletesOnly";
 
     @Override
     public List<String> getPathPatterns(Settings settings) {
@@ -35,6 +36,11 @@ public class SettingsFactoryServiceImpl implements SettingsFactoryService {
         return getList(settings, KEY_EXCLUDED_USERS);
     }
 
+    @Override
+    public boolean getDeletesOnly(Settings settings) {
+        return settings.getBoolean(KEY_DELETES_ONLY);
+    }
+    
     private List<String> getList(Settings settings, String key) {
         String value = settings.getString(key);
         return isEmpty(value) ? new ArrayList<String>() : asList(value.split("\\s+"));
